@@ -1,29 +1,41 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import * as d3 from 'd3'
-import { initialData as data } from './data'
 
-export default class TreeChart extends React.Component {
-  componentDidMount() {
-    const padding = 11
-    const svgWidth = 700
-    const svgHeight = 500
-    const treemap = d3.tree().size([500, svgHeight])
-    const nodes = treemap(d3.hierarchy(data, (d) => d.children))
+export default function Tree({ data }) {
+  const padding = 11
+  const svgWidth = 700
+  const svgHeight = 500
+  useEffect(() => {
+    doInitialStuff()
+  }, [])
+  useEffect(() => {
+    updateTree()
+  }, [data])
 
+  function doInitialStuff() {
     const svg = d3
       .select('svg')
       .attr('width', svgWidth)
       .attr('height', svgHeight)
+  }
+  function updateTree() {
+    const svg = d3.select('svg')
+    const treemap = d3.tree().size([500, svgHeight])
+    const nodes = treemap(d3.hierarchy(data, (d) => d.children))
+    const link = svg.selectAll('.link').data(nodes.descendants().slice(1)) // this cuts off the first node cos that doesnt have links going to it
 
-    const link = svg
-      .selectAll('.link')
-      .data(nodes.descendants().slice(1)) // this cuts off the first node cos that doesnt have links going to it
+    const enteringLinks = link
       .enter()
       .append('path')
       .attr('class', 'link')
       .style('stroke', 'lightsteelblue')
       .style('stroke-width', '2px')
       .attr('fill', 'none')
+
+    const updatedLinkSelection = link.merge(enteringLinks)
+
+    updatedLinkSelection
+      .attr('transform', (d) => 'translate(' + padding + ',0)')
       .attr('d', (d) => {
         return (
           'M' +
@@ -44,9 +56,6 @@ export default class TreeChart extends React.Component {
           nodes.x
         )
       })
-      .attr('transform', (d) => 'translate(' + padding + ',0)')
-
-    link
       .transition()
       .duration(1000)
       .attr('d', (d) => {
@@ -70,9 +79,12 @@ export default class TreeChart extends React.Component {
         )
       })
 
-    const node = svg
-      .selectAll('.node')
-      .data(nodes.descendants())
+    link.exit().remove()
+
+    //   ---------------------------------------------------------------------
+    const nodeSelection = svg.selectAll('.node').data(nodes.descendants())
+
+    const enteringNodeGroups = nodeSelection
       .enter()
       .append('g')
       .attr(
@@ -80,13 +92,15 @@ export default class TreeChart extends React.Component {
         (d) => 'translate(' + (nodes.y + padding) + ',' + nodes.x + ')'
       )
 
-    node
+    const updateNodeSelection = enteringNodeGroups.merge(nodeSelection)
+
+    enteringNodeGroups
       .append('circle')
       .attr('r', 10)
       .style('stroke', 'red')
       .style('fill', 'white')
 
-    node
+    enteringNodeGroups
       .append('text')
       .attr('dy', '.35em')
       .attr('x', 20)
@@ -94,7 +108,7 @@ export default class TreeChart extends React.Component {
       .attr('font-family', 'futura')
       .attr('fill', 'lightslategray')
 
-    node
+    enteringNodeGroups
       .transition()
       .duration(1000)
       .attr(
@@ -102,12 +116,11 @@ export default class TreeChart extends React.Component {
         (d) => 'translate(' + (d.y + padding) + ',' + d.x + ')'
       )
   }
-  render() {
-    return (
-      <section className="page-excl-nav">
-        <h1 className="graph-title"> Tree </h1>
-        <svg></svg>
-      </section>
-    )
-  }
+
+  return (
+    <section className="page-excl-nav">
+      <h1 className="graph-title"> Tree </h1>
+      <svg></svg>
+    </section>
+  )
 }

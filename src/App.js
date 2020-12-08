@@ -6,14 +6,16 @@ import { initialData, newData } from './data'
 
 function App() {
   const dataArr = [initialData, newData]
-  const [data, setData] = useState()
+  const [data, setData] = useState(initialData)
 
-  function onClick() {
-    setData()
+  function onClick(index) {
+    setData(dataArr[index])
   }
   return (
     <div className="App">
-      <Tree />
+      <button onClick={() => onClick(0)}>ONE</button>
+      <button onClick={() => onClick(1)}>TWO</button>
+      <Tree data={data} />
     </div>
   )
 }

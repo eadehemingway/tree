@@ -83,7 +83,7 @@ export default function Tree({ data }) {
     // DRAW THE NODES ===========================================================
     const nodeSelection = svg
       .selectAll('.node-groups')
-      .data(nodes.descendants())
+      .data(nodes.descendants(), (d) => d.data.name)
 
     const enteringNodeGroups = nodeSelection
       .enter()
@@ -125,7 +125,6 @@ export default function Tree({ data }) {
 
   return (
     <section className="page-excl-nav">
-      <h1 className="graph-title"> Tree </h1>
       <svg></svg>
     </section>
   )

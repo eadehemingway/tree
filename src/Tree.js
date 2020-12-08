@@ -16,14 +16,21 @@ export default function Tree({ data }) {
     // do the stuff you only want to do once, in this case its not much
     d3.select('svg').attr('width', svgWidth).attr('height', svgHeight)
   }
+
   function updateTree() {
     const svg = d3.select('svg')
     const treemap = d3.tree().size([500, svgHeight])
     const nodes = treemap(d3.hierarchy(data, (d) => d.children))
-    const link = svg.selectAll('.link').data(nodes.descendants().slice(1)) // this cuts off the first node cos that doesnt have links going to it
 
     // DRAW THE LINKS ===========================================================
-    const enteringLinks = link
+
+    // select all links on page
+    const linkSelection = svg
+      .selectAll('.link')
+      .data(nodes.descendants().slice(1)) // this cuts off the first node cos that doesnt have links going to it
+
+    // enter links if needed
+    const enteringLinks = linkSelection
       .enter()
       .append('path')
       .attr('class', 'link')
@@ -31,8 +38,10 @@ export default function Tree({ data }) {
       .style('stroke-width', '2px')
       .attr('fill', 'none')
 
-    const updatedLinkSelection = link.merge(enteringLinks)
+    // create update link selection i.e. all entering links and all existing links
+    const updatedLinkSelection = linkSelection.merge(enteringLinks)
 
+    // translate all links
     updatedLinkSelection
       .attr('transform', (d) => 'translate(' + padding + ',0)')
       .attr('d', (d) => {
@@ -78,18 +87,23 @@ export default function Tree({ data }) {
         )
       })
 
-    link.exit().remove()
+    // make unneeded links exit.
+    linkSelection.exit().remove()
 
     // DRAW THE NODES ===========================================================
+
+    // select all node groups on the page
     const nodeSelection = svg
       .selectAll('.node-groups')
       .data(nodes.descendants(), (d) => d.data.name)
 
+    // for each one create a group
     const enteringNodeGroups = nodeSelection
       .enter()
       .append('g')
       .attr('class', 'node-groups')
 
+    // in each group create a circle
     enteringNodeGroups
       .append('circle')
       .attr('class', 'nodes-circles')
@@ -97,6 +111,7 @@ export default function Tree({ data }) {
       .style('stroke', 'red')
       .style('fill', 'white')
 
+    // in each group create a text node
     enteringNodeGroups
       .append('text')
       .attr('dy', '.35em')
@@ -104,8 +119,10 @@ export default function Tree({ data }) {
       .attr('font-family', 'futura')
       .attr('fill', 'lightslategray')
 
+    // create an update selection i.e. combination of entering nodes and existing nodes
     const updateNodeSelection = enteringNodeGroups.merge(nodeSelection)
 
+    // translate all nodes
     updateNodeSelection
       .attr(
         'transform',
@@ -118,8 +135,10 @@ export default function Tree({ data }) {
         (d) => 'translate(' + (d.y + padding) + ',' + d.x + ')'
       )
 
+    // select all text nodes and update text
     updateNodeSelection.selectAll('text').text((d) => d.data.name)
 
+    // make unneeded nodes exit.
     nodeSelection.exit().remove()
   }
 
